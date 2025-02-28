@@ -1,0 +1,14 @@
+# Go-related
+/bin/
+/pkg/
+*.exe
+*.out
+*.log
+
+# Editor settings
+.idea/
+.vscode/
+
+# OS-specific
+.DS_Store
+Thumbs.db

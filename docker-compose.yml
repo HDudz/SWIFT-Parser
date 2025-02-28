@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: swift-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: rootpswd
+      DB_NAME: swiftcodes
+    networks:
+      - swift-network
+
+  db:
+    image: mysql:8
+    container_name: swift-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpswd
+      MYSQL_DATABASE: swiftcodes
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - swift-network
+
+volumes:
+  db_data:
+
+networks:
+  swift-network:
