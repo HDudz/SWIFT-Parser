@@ -4,9 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/HDudz/SWIFT-Parser/internal/database"
-	"github.com/go-chi/chi/v5"
 	"log"
-	"net/http"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -31,7 +29,7 @@ func ConnectDB() *sql.DB {
 	return nil
 }
 
-func ImportData(db *sql.DB) {
+func ImportDataIfNeeded(db *sql.DB) {
 	var count int
 	err := db.QueryRow("SELECT COUNT(*) FROM swiftTable").Scan(&count)
 	if err != nil {
@@ -46,16 +44,4 @@ func ImportData(db *sql.DB) {
 	} else {
 		fmt.Println("Data already exists, skipping import")
 	}
-}
-
-func StartServer() {
-	r := chi.NewRouter()
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	})
-
-	port := "8080"
-	fmt.Printf("Server running on port %s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
 }
