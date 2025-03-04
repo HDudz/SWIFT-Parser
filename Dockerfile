@@ -17,6 +17,8 @@ FROM alpine:latest
 WORKDIR /root/
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/data /root/data
+
 
 EXPOSE 8080
 
