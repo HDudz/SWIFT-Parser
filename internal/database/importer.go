@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 )
@@ -27,18 +28,15 @@ func ImportFromCSV(db *sql.DB, path string) error {
 		fmt.Println(record)
 		countryISO2 := strings.ToUpper(record[0])
 		swiftCode := record[1]
-		codeType := record[2]
 		bankName := record[3]
 		address := record[4]
-		town := record[5]
 		countryName := strings.ToUpper(record[6])
-		timeZone := record[7]
 		isHQ := strings.HasSuffix(swiftCode, "XXX")
 
 		_, err := db.Exec(`
-            INSERT INTO swiftTable (country_iso2, code, code_type, bank_name, address, town, country_name, time_zone, is_hq) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			countryISO2, swiftCode, codeType, bankName, address, town, countryName, timeZone, isHQ)
+            INSERT INTO swiftTable (country_iso2, code, bank_name, address, country_name, is_hq) 
+            VALUES (?, ?, ?, ?, ?, ?)`,
+			countryISO2, swiftCode, bankName, address, countryName, isHQ)
 
 		if err != nil {
 			return fmt.Errorf("Couldn't insert data into db, record: %s: error: %v\n", swiftCode, err)
@@ -46,4 +44,21 @@ func ImportFromCSV(db *sql.DB, path string) error {
 	}
 	fmt.Println("Data imported successfully!")
 	return nil
+}
+
+func ImportDataIfNeeded(db *sql.DB) {
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM swiftTable").Scan(&count)
+	if err != nil {
+		log.Fatal("Failed to check database:", err)
+	}
+	if count == 0 {
+		err = ImportFromCSV(db, "data/SWIFT_Code.csv")
+		if err != nil {
+			log.Fatal("Failed to import data from CSV:", err)
+		}
+		fmt.Println("Data has been imported")
+	} else {
+		fmt.Println("Data already exists, skipping import")
+	}
 }
