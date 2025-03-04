@@ -3,7 +3,6 @@ package server
 import (
 	"database/sql"
 	"fmt"
-	"github.com/HDudz/SWIFT-Parser/internal/database"
 	"log"
 	"time"
 
@@ -27,21 +26,4 @@ func ConnectDB() *sql.DB {
 
 	log.Fatal("Failed to connect with database: ", err, " Ping: ", db.Ping())
 	return nil
-}
-
-func ImportDataIfNeeded(db *sql.DB) {
-	var count int
-	err := db.QueryRow("SELECT COUNT(*) FROM swiftTable").Scan(&count)
-	if err != nil {
-		log.Fatal("Failed to check database:", err)
-	}
-	if count == 0 {
-		err = database.ImportFromCSV(db, "data/SWIFT_Code.csv")
-		if err != nil {
-			log.Fatal("Failed to import data from CSV:", err)
-		}
-		fmt.Println("Data has been imported")
-	} else {
-		fmt.Println("Data already exists, skipping import")
-	}
 }
