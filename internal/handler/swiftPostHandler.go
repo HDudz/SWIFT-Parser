@@ -18,7 +18,6 @@ func PostCodeHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		log.Printf(strings.ToUpper(newCode.CountryISO2), newCode.Code, newCode.BankName, newCode.Address, strings.ToUpper(newCode.CountryName), newCode.IsHQ)
 		_, err := db.Exec(`INSERT INTO swiftTable (country_iso2, code, bank_name, address, country_name, is_hq) 
 			VALUES (?, ?, ?, ?, ?, ?)`, strings.ToUpper(newCode.CountryISO2), newCode.Code, newCode.BankName, newCode.Address, strings.ToUpper(newCode.CountryName), newCode.IsHQ)
 
