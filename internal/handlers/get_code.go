@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"database/sql"
@@ -34,7 +34,7 @@ func GetCodeHandler(db *sql.DB) http.HandlerFunc {
 
 			rows, err := db.Query(`SELECT country_iso2, code, bank_name, address, is_hq 
 								   FROM swiftTable WHERE code != ? AND LEFT(code, 8) = ?`, hq.Code, hq.Code[:8])
-			log.Println(hq.Code[:8])
+
 			if err != nil {
 				log.Println("DB error:", err)
 				http.Error(w, "Internal error", http.StatusInternalServerError)
