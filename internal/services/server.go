@@ -1,15 +1,37 @@
-package server
+package services
 
 import (
 	"database/sql"
 	"fmt"
+	"github.com/HDudz/SWIFT-Parser/internal/database"
+	"github.com/go-chi/chi/v5"
 	"log"
+	"net/http"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func ConnectDB() *sql.DB {
+func StartServer(router *chi.Mux, db *sql.DB) error {
+
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+
+	database.ImportDataIfNeeded(db, "data/SWIFT_Code.csv")
+
+	fmt.Printf("Server running on port %s\n", server.Addr)
+	err := server.ListenAndServe()
+
+	if err != nil {
+		return fmt.Errorf("failed to listen and serve. error: %w", err)
+	}
+
+	return nil
+}
+
+func LoadDB() *sql.DB {
 	dsn := "root:rootpswd@tcp(swift-db:3306)/swiftcodes?parseTime=true"
 	var db *sql.DB
 	var err error
