@@ -21,7 +21,8 @@ func DeleteCodeHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Swift code deleted successfully"})
 
 	}
