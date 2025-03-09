@@ -2,24 +2,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/HDudz/SWIFT-Parser/internal/database"
-	"github.com/HDudz/SWIFT-Parser/internal/server"
-	"github.com/go-chi/chi/v5"
-	"log"
-	"net/http"
+	"github.com/HDudz/SWIFT-Parser/internal/services"
 )
 
 func main() {
 
-	r := chi.NewRouter()
+	db := services.LoadDB()
+	router := services.LoadRoutes(db)
 
-	db := server.ConnectDB()
+	err := services.StartServer(router, db)
 
-	database.ImportDataIfNeeded(db)
+	if err != nil {
+		fmt.Println("failed to start server: ", err)
+	}
 
-	server.SetupRoutes(r, db)
-
-	port := "8080"
-	fmt.Printf("Server running on port %s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
 }
