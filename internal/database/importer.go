@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 )
@@ -25,7 +24,6 @@ func ImportFromCSV(db *sql.DB, path string) error {
 
 	for _, record := range records[1:] {
 
-		fmt.Println(record)
 		countryISO2 := strings.ToUpper(record[0])
 		swiftCode := record[1]
 		bankName := record[3]
@@ -46,19 +44,20 @@ func ImportFromCSV(db *sql.DB, path string) error {
 	return nil
 }
 
-func ImportDataIfNeeded(db *sql.DB) {
+func ImportDataIfNeeded(db *sql.DB, path string) error {
 	var count int
 	err := db.QueryRow("SELECT COUNT(*) FROM swiftTable").Scan(&count)
 	if err != nil {
-		log.Fatal("Failed to check database:", err)
+		return fmt.Errorf("failed to check database: %v", err)
 	}
 	if count == 0 {
-		err = ImportFromCSV(db, "data/SWIFT_Code.csv")
+		err = ImportFromCSV(db, path)
 		if err != nil {
-			log.Fatal("Failed to import data from CSV:", err)
+			return fmt.Errorf("failed to import data from CSV: %v", err)
 		}
 		fmt.Println("Data has been imported")
 	} else {
 		fmt.Println("Data already exists, skipping import")
 	}
+	return nil
 }
