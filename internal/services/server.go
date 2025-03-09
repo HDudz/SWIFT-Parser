@@ -19,10 +19,13 @@ func StartServer(router *chi.Mux, db *sql.DB) error {
 		Handler: router,
 	}
 
-	database.ImportDataIfNeeded(db, "data/SWIFT_Code.csv")
+	err := database.ImportDataIfNeeded(db, "data/SWIFT_Code.csv")
+	if err != nil {
+		return fmt.Errorf("failed to import data. error: %w", err)
+	}
 
 	fmt.Printf("Server running on port %s\n", server.Addr)
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 
 	if err != nil {
 		return fmt.Errorf("failed to listen and serve. error: %w", err)
