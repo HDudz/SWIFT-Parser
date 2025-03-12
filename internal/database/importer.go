@@ -40,24 +40,25 @@ func ImportFromCSV(db *sql.DB, path string) error {
 			return fmt.Errorf("Couldn't insert data into db, record: %s: error: %v\n", swiftCode, err)
 		}
 	}
-	fmt.Println("Data imported successfully!")
 	return nil
 }
 
-func ImportDataIfNeeded(db *sql.DB, path string) error {
+func ImportDataIfNeeded(db *sql.DB, path string) (error, int) {
 	var count int
 	err := db.QueryRow("SELECT COUNT(*) FROM swiftTable").Scan(&count)
 	if err != nil {
-		return fmt.Errorf("failed to check database: %v", err)
+		return fmt.Errorf("failed to check database: %v", err), -1
 	}
 	if count == 0 {
 		err = ImportFromCSV(db, path)
 		if err != nil {
-			return fmt.Errorf("failed to import data from CSV: %v", err)
+			return fmt.Errorf("failed to import data from CSV: %v", err), -1
 		}
 		fmt.Println("Data has been imported")
+		return nil, 1
 	} else {
 		fmt.Println("Data already exists, skipping import")
+		return nil, 0
 	}
-	return nil
+
 }
