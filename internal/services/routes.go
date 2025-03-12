@@ -18,6 +18,7 @@ func LoadRoutes(db *sql.DB) *chi.Mux {
 
 	swiftSubRouter := chi.NewRouter()
 
+	swiftSubRouter.Get("/", func(w http.ResponseWriter, r *http.Request) {})
 	swiftSubRouter.Get("/{swift-code}", handlers.GetCodeHandler(db))
 	swiftSubRouter.Get("/country/{countryISO2code}", handlers.GetCountryHandler(db))
 	swiftSubRouter.Post("/", handlers.PostCodeHandler(db))
