@@ -1,4 +1,4 @@
-package test
+package unit_tests
 
 import (
 	"context"
@@ -108,7 +108,8 @@ func TestGetCodeHandler_NonHQ(t *testing.T) {
 	}
 
 	var resp models.MainSwift
-	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
+	err = json.NewDecoder(rr.Body).Decode(&resp)
+	if err != nil {
 		t.Fatalf("Error when decoding response: %v", err)
 	}
 
@@ -159,7 +160,8 @@ func TestGetCountryHandler(t *testing.T) {
 	}
 
 	var resp models.CountryModel
-	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
+	err = json.NewDecoder(rr.Body).Decode(&resp)
+	if err != nil {
 		t.Fatalf("Error when decoding response: %v", err)
 	}
 
@@ -231,6 +233,9 @@ func TestDeleteCodeHandler(t *testing.T) {
 	}
 	defer db.Close()
 
+	rows1 := sqlmock.NewRows([]string{"count"}).AddRow(1)
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(*) FROM swiftTable`)).WillReturnRows(rows1)
+
 	expectedSQL := `DELETE FROM swiftTable WHERE code = ?`
 	mock.ExpectExec(regexp.QuoteMeta(expectedSQL)).
 		WithArgs("ABCDEFGH").
@@ -245,8 +250,8 @@ func TestDeleteCodeHandler(t *testing.T) {
 	handler := handlers.DeleteCodeHandler(db)
 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusNoContent {
-		t.Errorf("Wrong status: received %v, expected %v", rr.Code, http.StatusNoContent)
+	if rr.Code != http.StatusOK {
+		t.Errorf("Wrong status: received %v, expected %v", rr.Code, http.StatusOK)
 	}
 
 	if ct := rr.Header().Get("Content-Type"); ct != "application/json" {
