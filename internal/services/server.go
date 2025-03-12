@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -19,7 +20,7 @@ func StartServer(router *chi.Mux, db *sql.DB) error {
 		Handler: router,
 	}
 
-	err := database.ImportDataIfNeeded(db, "data/SWIFT_Code.csv")
+	err, _ := database.ImportDataIfNeeded(db, "data/SWIFT_Code.csv")
 	if err != nil {
 		return fmt.Errorf("failed to import data. error: %w", err)
 	}
@@ -35,7 +36,15 @@ func StartServer(router *chi.Mux, db *sql.DB) error {
 }
 
 func LoadDB() *sql.DB {
-	dsn := "root:rootpswd@tcp(swift-db:3306)/swiftcodes?parseTime=true"
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+		dbUser, dbPassword, dbHost, dbPort, dbName)
+
 	var db *sql.DB
 	var err error
 
