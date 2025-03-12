@@ -1,0 +1,51 @@
+services:
+
+  tests:
+    image: golang:1.24.1-alpine
+    container_name: tests
+    working_dir: /app
+    volumes:
+      - .:/app
+    depends_on:
+      - db-test
+      - api-test
+    environment:
+      DB_HOST: db-test
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: rootpswd
+      DB_NAME: swiftDB-Test
+    networks:
+      - swift-network-test
+    command: ["go", "test", "-v", "./test/integration_tests"]
+
+
+  api-test:
+    build: .
+    container_name: api-test
+    depends_on:
+      - db-test
+    environment:
+      DB_HOST: db-test
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: rootpswd
+      DB_NAME: swiftDB-Test
+    networks:
+      - swift-network-test
+
+  db-test:
+    image: mysql:8
+    container_name: db-test
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpswd
+      MYSQL_DATABASE: swiftDB-Test
+    volumes:
+      - ./internal/database/migrations.sql:/docker-entrypoint-initdb.d/migrations.sql
+    networks:
+      - swift-network-test
+
+networks:
+  swift-network-test:
+    driver: bridge
