@@ -32,3 +32,4 @@ services:
 
 networks:
   swift-network:
+    driver: bridge
