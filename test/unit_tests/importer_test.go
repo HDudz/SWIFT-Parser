@@ -1,4 +1,4 @@
-package test
+package unit_tests
 
 import (
 	"github.com/DATA-DOG/go-sqlmock"
@@ -66,17 +66,34 @@ PL,ABCDEFGH,BIC11,Test Bank,"Test Address",Warsaw,POLAND,Europe/Warsaw`
 	}
 	tmpFile.Close()
 
-	rowsMain := sqlmock.NewRows([]string{"count"}).AddRow(0)
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(*) FROM swiftTable`)).WillReturnRows(rowsMain)
+	rows1 := sqlmock.NewRows([]string{"count"}).AddRow(1)
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(*) FROM swiftTable`)).WillReturnRows(rows1)
+
+	err, if_import := database.ImportDataIfNeeded(db, tmpFile.Name())
+
+	if err != nil {
+		t.Errorf("ImportDataIfNeeded zwróciło błąd: %v", err)
+	}
+
+	if if_import != 0 {
+		t.Errorf("Data import status error: expected: 0, received: %v ", if_import)
+	}
+
+	rows2 := sqlmock.NewRows([]string{"count"}).AddRow(0)
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(*) FROM swiftTable`)).WillReturnRows(rows2)
 
 	mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO swiftTable (country_iso2, code, bank_name, address, country_name, is_hq) 
             VALUES (?, ?, ?, ?, ?, ?)`)).
 		WithArgs("PL", "ABCDEFGH", "Test Bank", "Test Address", "POLAND", false).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = database.ImportDataIfNeeded(db, tmpFile.Name())
+	err, if_import = database.ImportDataIfNeeded(db, tmpFile.Name())
 	if err != nil {
 		t.Errorf("ImportDataIfNeeded zwróciło błąd: %v", err)
+	}
+
+	if if_import != 1 {
+		t.Errorf("Data import status error: expected: 1, received: %v ", if_import)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
