@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 )
 
@@ -15,6 +16,16 @@ func GetCodeHandler(db *sql.DB) http.HandlerFunc {
 		code := chi.URLParam(r, "swift-code")
 
 		isHQ := strings.HasSuffix(code, "XXX")
+
+		if len(code) != 11 {
+			http.Error(w, "Invalid SWIFT code format. Must be 11 characters long.", http.StatusBadRequest)
+			return
+		}
+
+		if !regexp.MustCompile(`^[A-Z0-9]{8,11}$`).MatchString(code) {
+			http.Error(w, "Invalid SWIFT code format. Must contain only uppercase letters and digits.", http.StatusBadRequest)
+			return
+		}
 
 		if isHQ {
 			var hq models.MainSwift

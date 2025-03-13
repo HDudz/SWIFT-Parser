@@ -7,11 +7,17 @@ import (
 	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
+	"regexp"
 )
 
 func GetCountryHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ISO := chi.URLParam(r, "countryISO2code")
+
+		if len(ISO) != 2 || !regexp.MustCompile(`^[A-Z]{2}$`).MatchString(ISO) {
+			http.Error(w, "Invalid country ISO2 code format. Must be 2 uppercase letters.", http.StatusBadRequest)
+			return
+		}
 
 		var country models.CountryModel
 		err := db.QueryRow(`SELECT country_iso2, country_name FROM swiftTable WHERE country_iso2 = ?`, ISO).
