@@ -11,7 +11,7 @@ import (
 func ImportFromCSV(db *sql.DB, path string) error {
 	file, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("Couldn't open file, error: %v", err)
+		return fmt.Errorf("couldn't open file, error: %v", err)
 	}
 	defer file.Close()
 
@@ -19,7 +19,7 @@ func ImportFromCSV(db *sql.DB, path string) error {
 
 	records, err := reader.ReadAll()
 	if err != nil {
-		return fmt.Errorf("Couldn't read CSV, error: %v", err)
+		return fmt.Errorf("couldn't read CSV, error: %v", err)
 	}
 
 	for _, record := range records[1:] {
@@ -37,7 +37,7 @@ func ImportFromCSV(db *sql.DB, path string) error {
 			countryISO2, swiftCode, bankName, address, countryName, isHQ)
 
 		if err != nil {
-			return fmt.Errorf("Couldn't insert data into db, record: %s: error: %v\n", swiftCode, err)
+			return fmt.Errorf("couldn't insert data into db, record: %s: error: %v\n", swiftCode, err)
 		}
 	}
 	return nil
