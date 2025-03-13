@@ -17,6 +17,8 @@ services:
 
   db:
     image: mysql:8
+    logging:
+      driver: "none"
     container_name: swift-db
     restart: always
     environment:
