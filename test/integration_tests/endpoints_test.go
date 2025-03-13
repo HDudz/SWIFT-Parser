@@ -16,9 +16,8 @@ import (
 )
 
 func waitForServer(url string, seconds int) error {
-	timeout := time.Duration(seconds) * time.Second
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
+	var i int
+	for i = 0; i < seconds; i += 2 {
 		resp, err := http.Get(url)
 		if err == nil && resp.StatusCode == http.StatusOK {
 			resp.Body.Close()
@@ -27,10 +26,10 @@ func waitForServer(url string, seconds int) error {
 		if resp != nil {
 			resp.Body.Close()
 		}
-		time.Sleep(2 * time.Second)
 		log.Print("Waiting for api to come up")
+		time.Sleep(2 * time.Second)
 	}
-	return fmt.Errorf("server not available at %s after %v", url, timeout)
+	return fmt.Errorf("server not available at %s after %v", url, i)
 }
 
 func prepareDB() error {
