@@ -37,6 +37,8 @@ services:
 
   db-test:
     image: mysql:8
+    logging:
+      driver: "none"
     container_name: db-test
     restart: always
     environment:
@@ -46,6 +48,8 @@ services:
       - ./internal/database/migrations.sql:/docker-entrypoint-initdb.d/migrations.sql
     networks:
       - swift-network-test
+
+
 
 networks:
   swift-network-test:
