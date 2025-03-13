@@ -1,6 +1,7 @@
 package unit_tests
 
 import (
+	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/HDudz/SWIFT-Parser/internal/database"
 	"os"
@@ -10,6 +11,8 @@ import (
 
 func TestImportFromCSV(t *testing.T) {
 
+	fmt.Print("\n========Starting Importer Unit tests========\n\n")
+
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		panic("Error when creating sqlmock: " + err.Error())
@@ -18,14 +21,14 @@ func TestImportFromCSV(t *testing.T) {
 
 	tmpFile, err := os.CreateTemp(os.TempDir(), "test_swift.csv")
 	if err != nil {
-		t.Fatalf("Nie udało się stworzyć pliku tymczasowego: %v", err)
+		t.Fatalf("Failed to create temp file: %v", err)
 	}
 	defer os.Remove(tmpFile.Name())
 
 	testData := `COUNTRY ISO2 CODE,SWIFT CODE,CODE TYPE,NAME,ADDRESS,TOWN NAME,COUNTRY NAME,TIME ZONE
 PL,ABCDEFGH,BIC11,Test Bank,"Test Address",Warsaw,POLAND,Europe/Warsaw`
 	if _, err := tmpFile.WriteString(testData); err != nil {
-		t.Fatalf("Błąd zapisu do pliku tymczasowego: %v", err)
+		t.Fatalf("Failed to save temp file: %v", err)
 	}
 	tmpFile.Close()
 
@@ -36,11 +39,11 @@ PL,ABCDEFGH,BIC11,Test Bank,"Test Address",Warsaw,POLAND,Europe/Warsaw`
 
 	err = database.ImportFromCSV(db, tmpFile.Name())
 	if err != nil {
-		t.Errorf("ImportFromCSV zwróciło błąd: %v", err)
+		t.Errorf("ImportFromCSV returned error: %v", err)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("Nie spełniono oczekiwań SQL mocka: %v", err)
+		t.Errorf("SQL mock expectations weren't met: %v", err)
 	}
 }
 
@@ -54,7 +57,7 @@ func TestImportDataIfNeeded(t *testing.T) {
 
 	tmpFile, err := os.CreateTemp(os.TempDir(), "test_swift.csv")
 	if err != nil {
-		t.Fatalf("Nie udało się stworzyć pliku tymczasowego: %v", err)
+		t.Fatalf("Failed to create temp file: %v", err)
 	}
 	defer os.Remove(tmpFile.Name())
 
@@ -62,7 +65,7 @@ func TestImportDataIfNeeded(t *testing.T) {
 PL,ABCDEFGH,BIC11,Test Bank,"Test Address",Warsaw,POLAND,Europe/Warsaw`
 
 	if _, err := tmpFile.WriteString(testData); err != nil {
-		t.Fatalf("Błąd zapisu do pliku tymczasowego: %v", err)
+		t.Fatalf("Failed to save temp file: %v", err)
 	}
 	tmpFile.Close()
 
@@ -72,7 +75,7 @@ PL,ABCDEFGH,BIC11,Test Bank,"Test Address",Warsaw,POLAND,Europe/Warsaw`
 	err, if_import := database.ImportDataIfNeeded(db, tmpFile.Name())
 
 	if err != nil {
-		t.Errorf("ImportDataIfNeeded zwróciło błąd: %v", err)
+		t.Errorf("ImportDataIfNeeded returned error: %v", err)
 	}
 
 	if if_import != 0 {
@@ -89,7 +92,7 @@ PL,ABCDEFGH,BIC11,Test Bank,"Test Address",Warsaw,POLAND,Europe/Warsaw`
 
 	err, if_import = database.ImportDataIfNeeded(db, tmpFile.Name())
 	if err != nil {
-		t.Errorf("ImportDataIfNeeded zwróciło błąd: %v", err)
+		t.Errorf("ImportDataIfNeeded returned error: %v", err)
 	}
 
 	if if_import != 1 {
@@ -97,6 +100,6 @@ PL,ABCDEFGH,BIC11,Test Bank,"Test Address",Warsaw,POLAND,Europe/Warsaw`
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("Nie spełniono oczekiwań SQL mocka: %v", err)
+		t.Errorf("SQL mock expectations weren't met: %v", err)
 	}
 }

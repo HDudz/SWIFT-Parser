@@ -78,7 +78,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	fmt.Print("\n========Startinng integration tests========\n\n")
 	exitCode := m.Run()
 
 	os.Exit(exitCode)

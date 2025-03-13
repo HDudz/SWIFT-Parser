@@ -3,6 +3,7 @@ package unit_tests
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/HDudz/SWIFT-Parser/internal/handlers"
 	"github.com/HDudz/SWIFT-Parser/internal/models"
 	"net/http"
@@ -16,6 +17,9 @@ import (
 )
 
 func TestGetCodeHandler_HQ(t *testing.T) {
+
+	fmt.Print("\n========Starting Handlers Unit tests========\n\n")
+
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		panic("Error when creating sqlmock: " + err.Error())
