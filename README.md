@@ -55,7 +55,8 @@ This will build and run the test environment, executing all tests automatically.
 
 The application uses MySQL as the database engine.
 Application will automacally create necessary tables and import data from CSV file, if it's not already imported.
-I assumed the address is not mandatory, and the program imports records with empty address fields.
+
+> **Important**: I assumed the address is not mandatory, and the program imports records with empty address fields.
 Every other column cannot be empty, and if it is, the record will be ommited.
 
 If you need to reset the database, you can remove the volume and recreate the containers:
