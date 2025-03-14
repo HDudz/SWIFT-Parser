@@ -14,8 +14,8 @@ func DeleteCodeHandler(db *sql.DB) http.HandlerFunc {
 
 		code := chi.URLParam(r, "swift-code")
 
-		if len(code) != 11 {
-			http.Error(w, "Invalid SWIFT code format. Must be 11 characters long.", http.StatusBadRequest)
+		if len(code) > 11 || len(code) < 8 {
+			http.Error(w, "Invalid SWIFT code format. Must be 8-11 characters long.", http.StatusBadRequest)
 			return
 		}
 

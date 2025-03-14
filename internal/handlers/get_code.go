@@ -17,12 +17,12 @@ func GetCodeHandler(db *sql.DB) http.HandlerFunc {
 
 		isHQ := strings.HasSuffix(code, "XXX")
 
-		if len(code) != 11 {
-			http.Error(w, "Invalid SWIFT code format. Must be 11 characters long.", http.StatusBadRequest)
+		if len(code) < 8 || len(code) > 11 {
+			http.Error(w, "Invalid SWIFT code format. Must be 8-11 characters long.", http.StatusBadRequest)
 			return
 		}
 
-		if !regexp.MustCompile(`^[A-Z0-9]{8,11}$`).MatchString(code) {
+		if !regexp.MustCompile(`^[A-Z0-9]*$`).MatchString(code) {
 			http.Error(w, "Invalid SWIFT code format. Must contain only uppercase letters and digits.", http.StatusBadRequest)
 			return
 		}
