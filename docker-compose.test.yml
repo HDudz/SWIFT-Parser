@@ -17,7 +17,7 @@ services:
       DB_NAME: swiftDB-Test
     networks:
       - swift-network-test
-    command: [ "sh", "-c", "go test -v ./test/unit_tests ; go test -v ./test/integration_tests" ]
+    command: [ "sh", "-c", "go test -v ./test/unit_tests/handler_tests; go test -v ./test/unit_tests/importer_tests; go test -v ./test/integration_tests" ]
 
 
 
