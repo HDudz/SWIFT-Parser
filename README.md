@@ -1,6 +1,6 @@
 # SWIFT Code API
 
-This is my first project created in GO, it provides a REST API for managing SWIFT codes. It is built using Go with the `chi` router and utilizes MySQL for database storage. The application is containerized using Docker and Docker Compose for easy deployment.
+This is my first project created in GO, it imports data from CSV file and provides a REST API for managing SWIFT codes. It is built using Go with the `chi` router and utilizes MySQL for database storage. The application is containerized using Docker for easy deployment.
 
 ## Getting Started
 
@@ -53,7 +53,10 @@ This will build and run the test environment, executing all tests automatically.
 
 ## Database
 
-The application uses MySQL as the database engine. The necessary tables will be created automatically when the container starts.
+The application uses MySQL as the database engine.
+Application will automacally create necessary tables and import data from CSV file, if it's not already imported.
+I assumed the address is not mandatory, and the program imports records with empty address fields.
+Every other column cannot be empty, and if it is, the record will be ommited.
 
 If you need to reset the database, you can remove the volume and recreate the containers:
 ```sh
