@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -20,6 +21,7 @@ func waitForServer(url string, seconds int) error {
 	for i = 0; i < seconds; i += 2 {
 		resp, err := http.Get(url)
 		if err == nil && resp.StatusCode == http.StatusOK {
+
 			resp.Body.Close()
 			return nil
 		}
@@ -77,7 +79,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Print("\n========Startinng integration tests========\n\n")
+	fmt.Print("\n========Starting integration tests========\n\n")
 	exitCode := m.Run()
 
 	os.Exit(exitCode)
@@ -119,17 +121,34 @@ func TestPostCode(t *testing.T) {
 
 	if resp1.StatusCode != http.StatusCreated {
 		t.Fatalf("Expected status 201, got %d", resp1.StatusCode)
+	} else {
+		t.Logf("Correct status for resp1: %v", resp1.StatusCode)
 	}
 	if resp2.StatusCode != http.StatusCreated {
 		t.Fatalf("Expected status 201, got %d", resp2.StatusCode)
+	} else {
+		t.Logf("Correct status for resp2: %v", resp2.StatusCode)
 	}
 	body1, err := io.ReadAll(resp1.Body)
 	body2, err := io.ReadAll(resp2.Body)
+
 	if err != nil {
 		t.Fatalf("Failed to read response: %v", err)
 	}
-	t.Logf("POST %s response nr. 1: %s", url, body1)
-	t.Logf("POST %s response nr. 2: %s", url, body2)
+
+	expectedResponse := `{"message":"Swift code inserted successfully"}`
+
+	if strings.TrimSpace(string(body1)) != expectedResponse {
+		t.Errorf("Wrong response: received %v, expected %v", string(body1), expectedResponse)
+	} else {
+		t.Logf("Correct response for POST with code \"%s\": %s", HQCode, string(body2))
+	}
+
+	if strings.TrimSpace(string(body2)) != expectedResponse {
+		t.Errorf("Wrong response: received %v, expected %v", string(body2), expectedResponse)
+	} else {
+		t.Logf("Correct response for POST with code \"%s\": %s", BranchCode, string(body2))
+	}
 }
 
 func TestGetCode(t *testing.T) {
@@ -144,13 +163,14 @@ func TestGetCode(t *testing.T) {
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("Expected status 200, got %d", resp.StatusCode)
+	} else {
+		t.Logf("Correct status: %v", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("Failed to read response: %v", err)
 	}
-	t.Logf("GET %s response:\n %s", url, body)
 
 	var response models.MainSwift
 	err = json.Unmarshal(body, &response)
@@ -160,14 +180,20 @@ func TestGetCode(t *testing.T) {
 
 	if response.Code != HQCode {
 		t.Fatalf("Expected HQ code: %v, got \"%v\"", HQCode, response.Code)
+	} else {
+		t.Logf("Correct HQ code: %v", response.Code)
 	}
 
 	if len(*response.Branches) != 1 {
 		t.Fatalf("Expected 1 branch connected to HQ, got \"%v\"", len(*response.Branches))
+	} else {
+		t.Logf("Correct number of branches connected to HQ: %v", len(*response.Branches))
 	}
 
 	if (*response.Branches)[0].Code != BranchCode {
 		t.Fatalf("Expected branch code: %v, got %v", BranchCode, (*response.Branches)[0].Code)
+	} else {
+		t.Logf("Correct Branch code: %v", (*response.Branches)[0].Code)
 	}
 }
 
@@ -183,13 +209,14 @@ func TestGetCountry(t *testing.T) {
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("Expected status 200, got %d", resp.StatusCode)
+	} else {
+		t.Logf("Correct status: %v", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("Failed to read response: %v", err)
 	}
-	t.Logf("GET %s response:\n %s", url, body)
 
 	var response models.CountryModel
 	err = json.Unmarshal(body, &response)
@@ -199,14 +226,20 @@ func TestGetCountry(t *testing.T) {
 
 	if response.CountryISO2 != ISO2Code {
 		t.Fatalf("Expected ISOcode: %v, got \"%v\"", ISO2Code, response.CountryISO2)
+	} else {
+		t.Logf("Correct ISOcode: %v", response.CountryISO2)
 	}
 
 	if response.CountryName != "TEST COUNTRY" {
 		t.Fatalf("Expected country name: TEST COUNTRY, got \"%v\"", response.CountryName)
+	} else {
+		t.Logf("Correct country name: %v", response.CountryName)
 	}
 
 	if len(*response.SwiftCodes) != 2 {
-		t.Fatalf("Expected 2 records with ISO2code: TS, got \"%v\"", len(*response.SwiftCodes))
+		t.Fatalf("Expected 2 records with \"TS\" ISO2 code, got %v", len(*response.SwiftCodes))
+	} else {
+		t.Logf("Correct number of records with \"TS\" ISO2 code: %v", len(*response.SwiftCodes))
 	}
 }
 
@@ -225,11 +258,26 @@ func TestDeleteCode(t *testing.T) {
 		t.Fatalf("Failed to create DELETE request for url2: %v", err2)
 	}
 
-	resp1, err := client.Do(req1)
-	resp2, err := client.Do(req2)
+	resp1, err1 := client.Do(req1)
+	resp2, err2 := client.Do(req2)
+
+	if err1 != nil {
+		t.Fatalf("Failed to execute DELETE request for %v: %v", url1, err1)
+	}
+	if err2 != nil {
+		t.Fatalf("Failed to execute DELETE request for %v: %v", url2, err2)
+	}
 
 	if resp1.StatusCode != http.StatusOK {
 		t.Fatalf("Expected status %d, got %d", http.StatusOK, resp1.StatusCode)
+	} else {
+		t.Logf("Correct status for resp1: %v", resp1.StatusCode)
+	}
+
+	if resp2.StatusCode != http.StatusOK {
+		t.Fatalf("Expected status %d, got %d", http.StatusOK, resp2.StatusCode)
+	} else {
+		t.Logf("Correct status for resp2: %v", resp2.StatusCode)
 	}
 
 	body1, err := io.ReadAll(resp1.Body)
@@ -237,7 +285,18 @@ func TestDeleteCode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to read response: %v", err)
 	}
-	t.Logf("DELETE %s response: %s", url1, body1)
-	t.Logf("DELETE %s response: %s", url2, body2)
+	expectedResponse := `{"message":"Swift code deleted successfully"}`
+
+	if strings.TrimSpace(string(body1)) != expectedResponse {
+		t.Errorf("Wrong response: received %v, expected %v", string(body1), expectedResponse)
+	} else {
+		t.Logf("Correct response for DELETE %s: %v", url1, string(body1))
+	}
+
+	if strings.TrimSpace(string(body2)) != expectedResponse {
+		t.Errorf("Wrong response: received %v, expected %v", string(body2), expectedResponse)
+	} else {
+		t.Logf("Correct response for DELETE %s: %v", url2, string(body2))
+	}
 
 }

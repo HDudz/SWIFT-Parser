@@ -1,13 +1,15 @@
-package unit_tests
+package handler_tests
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/HDudz/SWIFT-Parser/internal/handlers"
 	"github.com/HDudz/SWIFT-Parser/internal/models"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -16,19 +18,25 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func TestGetCodeHandler_HQ(t *testing.T) {
+var db *sql.DB
+var mock sqlmock.Sqlmock
+var err error
 
-	fmt.Print("\n========Starting Handlers Unit tests========\n\n")
+func TestMain(m *testing.M) {
 
-	db, mock, err := sqlmock.New()
+	db, mock, err = sqlmock.New()
 	if err != nil {
 		panic("Error when creating sqlmock: " + err.Error())
 	}
 	defer db.Close()
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		panic("There are unmet expectations: " + err.Error())
-	}
+	fmt.Print("\n========Starting handlers tests========\n\n")
+	exitCode := m.Run()
+
+	os.Exit(exitCode)
+}
+
+func TestGetCodeHandler_HQ(t *testing.T) {
 	code := "ABCDEFXXX"
 	queryMain := `
 		SELECT country_iso2, code, bank_name, address, country_name, is_hq
@@ -60,29 +68,30 @@ func TestGetCodeHandler_HQ(t *testing.T) {
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("Wrong status: received %v, expected %v", status, http.StatusOK)
+	} else {
+		t.Logf("Correct status: %v", status)
 	}
 
 	if ct := rr.Header().Get("Content-Type"); ct != "application/json" {
 		t.Errorf("Wrong Content-Type: received %v, expected application/json", ct)
+	} else {
+		t.Logf("Correct Content-Type: %v", ct)
 	}
 
 	var resp models.MainSwift
-	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
+	err := json.NewDecoder(rr.Body).Decode(&resp)
+	if err != nil {
 		t.Fatalf("Error when decoding response: %v", err)
 	}
 
 	if resp.Code != code {
 		t.Errorf("Wrong code: expected %v, received %v", code, resp.Code)
+	} else {
+		t.Logf("Correct code: %v", resp.Code)
 	}
 }
 
 func TestGetCodeHandler_NonHQ(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		panic("Error when creating sqlmock: " + err.Error())
-	}
-	defer db.Close()
-
 	code := "ABCDEF01"
 
 	query := `
@@ -105,10 +114,14 @@ func TestGetCodeHandler_NonHQ(t *testing.T) {
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("Wrong status: received %v, expected %v", status, http.StatusOK)
+	} else {
+		t.Logf("Correct status: %v", status)
 	}
 
 	if ct := rr.Header().Get("Content-Type"); ct != "application/json" {
 		t.Errorf("Wrong Content-Type: received %v, expected application/json", ct)
+	} else {
+		t.Logf("Correct Content-Type: %v", ct)
 	}
 
 	var resp models.MainSwift
@@ -119,17 +132,13 @@ func TestGetCodeHandler_NonHQ(t *testing.T) {
 
 	if resp.Code != code {
 		t.Errorf("Wrong code: expected %v, received %v", code, resp.Code)
+	} else {
+		t.Logf("Correct code: %v", resp.Code)
 	}
 
 }
 
 func TestGetCountryHandler(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		panic("Error when creating sqlmock: " + err.Error())
-	}
-	defer db.Close()
-
 	ISO := "PL"
 
 	queryCountry := `SELECT country_iso2, country_name FROM swiftTable WHERE country_iso2 = ?`
@@ -157,10 +166,14 @@ func TestGetCountryHandler(t *testing.T) {
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("Wrong status: received %v, expected %v", status, http.StatusOK)
+	} else {
+		t.Logf("Correct status: %v", status)
 	}
 
 	if ct := rr.Header().Get("Content-Type"); ct != "application/json" {
 		t.Errorf("Wrong Content-Type: received %v, expected application/json", ct)
+	} else {
+		t.Logf("Correct Content-Type: %v", ct)
 	}
 
 	var resp models.CountryModel
@@ -171,30 +184,32 @@ func TestGetCountryHandler(t *testing.T) {
 
 	if resp.CountryISO2 != ISO {
 		t.Errorf("Wrong ISO code: expected %v, received %v", ISO, resp.CountryISO2)
+	} else {
+		t.Logf("Correct ISO code: %v", resp.CountryISO2)
 	}
 
 	if resp.CountryName != "Poland" {
 		t.Errorf("Wrong country name: expected 'Poland', received %v", resp.CountryName)
+	} else {
+		t.Logf("Correct country name: %v", resp.CountryName)
 	}
 
 	if len(*resp.SwiftCodes) != 1 {
 		t.Errorf("Expected 1 swift code, received %d", len(*resp.SwiftCodes))
+	} else {
+		t.Logf("Correct number of swift codes: %v", len(*resp.SwiftCodes))
 	}
 
 	swiftCode := (*resp.SwiftCodes)[0]
 	if swiftCode.Code != "ABCDEFGH" {
-		t.Errorf("Wring swift code: received %v, expected ABCDEFGH", swiftCode.Code)
+		t.Errorf("Wrong swift code: received %v, expected ABCDEFGH", swiftCode.Code)
+	} else {
+		t.Logf("Correct swift code: %v", swiftCode.Code)
 	}
 
 }
 
 func TestPostCodeHandler(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		panic("Error when creating sqlmock: " + err.Error())
-	}
-	defer db.Close()
-
 	reqBody := `{
 		"countryISO2": "PL",
 		"swiftCode": "ABCDEFGH",
@@ -217,26 +232,26 @@ func TestPostCodeHandler(t *testing.T) {
 
 	if rr.Code != http.StatusCreated {
 		t.Errorf("Wrong status: received %v, expected %v", rr.Code, http.StatusCreated)
+	} else {
+		t.Logf("Correct status: %v", rr.Code)
 	}
 
 	if ct := rr.Header().Get("Content-Type"); ct != "application/json" {
 		t.Errorf("Wrong Content-Type: received %v, expected application/json", ct)
+	} else {
+		t.Logf("Correct Content-Type: %v", ct)
 	}
 
 	expectedResponse := `{"message":"Swift code inserted successfully"}`
 	if strings.TrimSpace(rr.Body.String()) != expectedResponse {
 		t.Errorf("Wrong response: received %v, expected %v", rr.Body.String(), expectedResponse)
+	} else {
+		t.Logf("Correct response: %v", rr.Body.String())
 	}
 
 }
 
 func TestDeleteCodeHandler(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		panic("Error when creating sqlmock: " + err.Error())
-	}
-	defer db.Close()
-
 	rows1 := sqlmock.NewRows([]string{"count"}).AddRow(1)
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(*) FROM swiftTable`)).WillReturnRows(rows1)
 
@@ -256,15 +271,21 @@ func TestDeleteCodeHandler(t *testing.T) {
 
 	if rr.Code != http.StatusOK {
 		t.Errorf("Wrong status: received %v, expected %v", rr.Code, http.StatusOK)
+	} else {
+		t.Logf("Correct status: %v", rr.Code)
 	}
 
 	if ct := rr.Header().Get("Content-Type"); ct != "application/json" {
 		t.Errorf("Wrong Content-Type: received %v, expected application/json", ct)
+	} else {
+		t.Logf("Correct Content-Type: %v", ct)
 	}
 
 	expectedResponse := `{"message":"Swift code deleted successfully"}`
 	if strings.TrimSpace(rr.Body.String()) != expectedResponse {
 		t.Errorf("Wrong response: received %v, expected %v", rr.Body.String(), expectedResponse)
+	} else {
+		t.Logf("Correct response: %v", rr.Body.String())
 	}
 
 }
